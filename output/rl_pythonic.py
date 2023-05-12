@@ -1450,7 +1450,7 @@ if _lib_platform == 'win32':
     try:
         rlapi = CDLLEx(_lib_fname_abspath, LOAD_WITH_ALTERED_SEARCH_PATH)
     except OSError:
-        print("Unable to load {}.".format(_lib_fname[_lib_platform]))
+        print(f"Unable to load {_lib_fname[_lib_platform]}.")
         rlapi = None
 else:
     rlapi = CDLL(_lib_fname_abspath)
@@ -1544,9 +1544,7 @@ def _str_out(value):
 
 
 def _arr_in(typ, data):
-    if isinstance(data, POINTER(typ)):
-        return data
-    return (typ * len(data))(*data)
+    return data if isinstance(data, POINTER(typ)) else (typ * len(data))(*data)
 
 
 def _arr2_in(typ, data):
@@ -1569,9 +1567,7 @@ def _float(value):
 
 
 def _int(value, ranged=None):
-    if ranged:
-        return max(ranged[0], min(int(value), ranged[1]))
-    return int(value)
+    return max(ranged[0], min(int(value), ranged[1])) if ranged else int(value)
 
 
 def _vec2(seq):
@@ -1649,8 +1645,7 @@ class Vector2(Structure):
     def one():
         # type: () -> Vector2
         """Vector with components value 1.0f"""
-        result = _Vector2One()
-        return result
+        return _Vector2One()
 
 
     def __init__(self, x=None, y=None):
@@ -1677,7 +1672,7 @@ class Vector2(Structure):
     def __getattr__(self, attr):
         m = _VEC2_GET_SWZL.match(attr)
         if not m:
-            raise AttributeError("Vector2 object does not have attribute '{}'.".format(attr))
+            raise AttributeError(f"Vector2 object does not have attribute '{attr}'.")
         cls = {1: float, 2: Vector2, 3: Vector3, 4: Vector4}.get(len(attr))
         v = self.todict()
         return cls(*(v[ch] for ch in attr))
@@ -1685,7 +1680,7 @@ class Vector2(Structure):
     def __setattr__(self, attr, value):
         m = _VEC2_SET_SWZL.match(attr)
         if not m:
-            raise AttributeError("Vector2 object does not have attribute '{}'.".format(attr))
+            raise AttributeError(f"Vector2 object does not have attribute '{attr}'.")
         if len(attr) == 1:
             super(Vector2, self).__setattr__(attr, float(value))
         else:
@@ -1703,48 +1698,42 @@ class Vector2(Structure):
 
 
     def __str__(self):
-        return "({}, {})".format(self.x, self.y)
+        return f"({self.x}, {self.y})"
 
     def __repr__(self):
-        return "Vector2{}".format(self.__str__())
+        return f"Vector2{self.__str__()}"
 
     @property
     def length(self):
         # type: (Vector2) -> float
         """Calculate vector length"""
-        result = _Vector2Length(self)
-        return result
+        return _Vector2Length(self)
 
     @property
     def length_sqr(self):
         # type: (Vector2) -> float
         """Calculate vector square length"""
-        result = _Vector2LengthSqr(self)
-        return result
+        return _Vector2LengthSqr(self)
 
     def dot_product(self, v2):
         # type: (Vector2, Vector2) -> float
         """Calculate two vectors dot product"""
-        result = _Vector2DotProduct(self, _vec2(v2))
-        return result
+        return _Vector2DotProduct(self, _vec2(v2))
 
     def distance(self, v2):
         # type: (Vector2, Vector2) -> float
         """Calculate distance between two vectors"""
-        result = _Vector2Distance(self, _vec2(v2))
-        return result
+        return _Vector2Distance(self, _vec2(v2))
 
     def distance_sqr(self, v2):
         # type: (Vector2, Vector2) -> float
         """Calculate square distance between two vectors"""
-        result = _Vector2DistanceSqr(self, _vec2(v2))
-        return result
+        return _Vector2DistanceSqr(self, _vec2(v2))
 
     def angle(self, v2):
         # type: (Vector2, Vector2) -> float
         """Calculate angle from two vectors"""
-        result = _Vector2Angle(self, _vec2(v2))
-        return result
+        return _Vector2Angle(self, _vec2(v2))
 
     def normalize(self):
         # type: (Vector2) -> Vector2
@@ -1819,8 +1808,7 @@ class Vector3(Structure):
     def one():
         # type: () -> Vector3
         """Vector with components value 1.0f"""
-        result = _Vector3One()
-        return result
+        return _Vector3One()
 
 
     def __init__(self, x=None, y=None, z=None):
@@ -1848,7 +1836,7 @@ class Vector3(Structure):
     def __getattr__(self, attr):
         m = _VEC3_GET_SWZL.match(attr)
         if not m:
-            raise AttributeError("Vector3 object does not have attribute '{}'.".format(attr))
+            raise AttributeError(f"Vector3 object does not have attribute '{attr}'.")
         cls = {1: float, 2: Vector2, 3: Vector3, 4: Vector4}.get(len(attr))
         v = self.todict()
         return cls(*(v[ch] for ch in attr))
@@ -1856,7 +1844,7 @@ class Vector3(Structure):
     def __setattr__(self, attr, value):
         m = _VEC3_SET_SWZL.match(attr)
         if not m:
-            raise AttributeError("Vector3 object does not have attribute '{}'.".format(attr))
+            raise AttributeError(f"Vector3 object does not have attribute '{attr}'.")
         if len(attr) == 1:
             super(Vector3, self).__setattr__(attr, float(value))
         else:
@@ -1874,30 +1862,27 @@ class Vector3(Structure):
         self.z = float(d.get('z', self.z))
 
     def __str__(self):
-        return "({}, {}, {})".format(self.x, self.y, self.z)
+        return f"({self.x}, {self.y}, {self.z})"
 
     def __repr__(self):
-        return "Vector3{}".format(self.__str__())
+        return f"Vector3{self.__str__()}"
 
     @property
     def length(self):
         # type: (Vector3) -> float
         """Calculate vector length"""
-        result = _Vector3Length(self)
-        return result
+        return _Vector3Length(self)
 
     @property
     def length_sqr(self):
         # type: (Vector3) -> float
         """Calculate vector square length"""
-        result = _Vector3LengthSqr(self)
-        return result
+        return _Vector3LengthSqr(self)
 
     def cross_product(self, v2):
         # type: (Vector3, Vector3) -> float
         """Calculate two vectors cross product"""
-        result = _Vector3CrossProduct(self, _vec3(v2))
-        return result
+        return _Vector3CrossProduct(self, _vec3(v2))
 
     def perpendicular(self):
         # type: (Vector3) -> Vector3
@@ -1908,26 +1893,22 @@ class Vector3(Structure):
     def dot_product(self, v2):
         # type: (Vector3, Vector3) -> float
         """Calculate two vectors dot product"""
-        result = _Vector3DotProduct(self, _vec3(v2))
-        return result
+        return _Vector3DotProduct(self, _vec3(v2))
 
     def distance(self, v2):
         # type: (Vector3, Vector3) -> float
         """Calculate distance between two vectors"""
-        result = _Vector3Distance(self, _vec3(v2))
-        return result
+        return _Vector3Distance(self, _vec3(v2))
 
     def distance_sqr(self, v2):
         # type: (Vector3, Vector3) -> float
         """Calculate square distance between two vectors"""
-        result = _Vector3DistanceSqr(self, _vec3(v2))
-        return result
+        return _Vector3DistanceSqr(self, _vec3(v2))
 
     def angle(self, v2):
         # type: (Vector3, Vector3) -> float
         """Calculate angle between two vectors"""
-        result = _Vector3Angle(self, _vec3(v2))
-        return result
+        return _Vector3Angle(self, _vec3(v2))
 
     def normalize(self):
         # type: (Vector3) -> Vector3
@@ -1998,8 +1979,7 @@ class Vector3(Structure):
     def to_float_v(self):
         # type: (Vector3) -> Seq[float]
         """Get Vector3 as float array"""
-        result = _Vector3ToFloatV(self)
-        return result
+        return _Vector3ToFloatV(self)
 
     def clamp(self, min_, max_):
         # type: (Vector3, Vector3, Vector3) -> Vector3
@@ -2016,8 +1996,7 @@ class Vector3(Structure):
     def refract(self, n, r):
         # type: (Vector3, Vector3, float) -> int
         """Compute the direction of a refracted ray where v specifies the normalized direction of the incoming ray, n specifies the normalized normal vector of the interface of two optical media, and r specifies the ratio of the refractive index of the medium from where the ray comes to the refractive index of the medium on the other side of the surface"""
-        result = _Vector3Refract(self, _vec3(n), float(r))
-        return result
+        return _Vector3Refract(self, _vec3(n), float(r))
 
 
 # Pointer type to Vector3s
@@ -2068,7 +2047,7 @@ class Vector4(Structure):
     def __getattr__(self, attr):
         m = _VEC4_GET_SWZL.match(attr)
         if not m:
-            raise AttributeError("Vector4 object does not have attribute '{}'.".format(attr))
+            raise AttributeError(f"Vector4 object does not have attribute '{attr}'.")
         cls = {1: float, 2: Vector2, 3: Vector3, 4: Vector4}.get(len(attr))
         v = self.todict()
         return cls(*(v[ch] for ch in attr))
@@ -2076,7 +2055,7 @@ class Vector4(Structure):
     def __setattr__(self, attr, value):
         m = _VEC4_SET_SWZL.match(attr)
         if not m:
-            raise AttributeError("Vector4 object does not have attribute '{}'.".format(attr))
+            raise AttributeError(f"Vector4 object does not have attribute '{attr}'.")
         if len(attr) == 1:
             super(Vector4, self).__setattr__(attr, float(value))
         else:
@@ -2096,10 +2075,10 @@ class Vector4(Structure):
 
 
     def __str__(self):
-        return "({}, {}, {}, {})".format(self.x, self.y, self.z, self.w)
+        return f"({self.x}, {self.y}, {self.z}, {self.w})"
 
     def __repr__(self):
-        return "Vector4{}".format(self.__str__())
+        return f"Vector4{self.__str__()}"
 
 
 # Pointer type to Vector4s
@@ -2142,92 +2121,93 @@ class Matrix(Structure):
     def identity():
         # type: () -> Matrix
         """Get identity matrix"""
-        result = _MatrixIdentity()
-        return result
+        return _MatrixIdentity()
 
     @classmethod
     def translate(cls, x, y, z):
         # type: (float, float, float) -> Matrix
         """Get translation matrix"""
-        result = _MatrixTranslate(float(x), float(y), float(z))
-        return result
+        return _MatrixTranslate(float(x), float(y), float(z))
 
     @classmethod
     def rotate(cls, axis, angle):
         # type: (Vector3, float) -> Matrix
         """Create rotation matrix from axis and angle. Angle should be provided in radians"""
-        result = _MatrixRotate(_vec3(axis), float(angle))
-        return result
+        return _MatrixRotate(_vec3(axis), float(angle))
 
     @classmethod
     def rotate_x(cls, angle):
         # type: (float) -> Matrix
         """Get x-rotation matrix. Angle must be provided in radians"""
-        result = _MatrixRotateX(float(angle))
-        return result
+        return _MatrixRotateX(float(angle))
 
     @classmethod
     def rotate_y(cls, angle):
         # type: (float) -> Matrix
         """Get y-rotation matrix. Angle must be provided in radians"""
-        result = _MatrixRotateY(float(angle))
-        return result
+        return _MatrixRotateY(float(angle))
 
     @classmethod
     def rotate_z(cls, angle):
         # type: (float) -> Matrix
         """Get z-rotation matrix. Angle must be provided in radians"""
-        result = _MatrixRotateZ(float(angle))
-        return result
+        return _MatrixRotateZ(float(angle))
 
     @classmethod
     def rotate_xyz(cls, angle):
         # type: (Vector3) -> Matrix
         """Get xyz-rotation matrix. Angle must be provided in radians"""
-        result = _MatrixRotateXYZ(_vec3(angle))
-        return result
+        return _MatrixRotateXYZ(_vec3(angle))
 
     @classmethod
     def rotate_zyx(cls, angle):
         # type: (Vector3) -> Matrix
         """Get zyx-rotation matrix. Angle must be provided in radians"""
-        result = _MatrixRotateZYX(_vec3(angle))
-        return result
+        return _MatrixRotateZYX(_vec3(angle))
 
     @classmethod
     def scale(cls, x, y, z):
         # type: (float, float, float) -> Matrix
         """Get scaling matrix"""
-        result = _MatrixScale(float(x), float(y), float(z))
-        return result
+        return _MatrixScale(float(x), float(y), float(z))
 
     @classmethod
     def frustum(cls, left, right, bottom, top, near, far):
         # type: (float, float, float, float, float, float) -> Matrix
         """Get perspective projection matrix"""
-        result = _MatrixFrustum(float(left), float(right), float(bottom), float(top), float(near), float(far))
-        return result
+        return _MatrixFrustum(
+            float(left),
+            float(right),
+            float(bottom),
+            float(top),
+            float(near),
+            float(far),
+        )
 
     @classmethod
     def perspective(cls, fovy, aspect, near, far):
         # type: (float, float, float, float) -> Matrix
         """Get perspective projection matrix. Fovy angle must be provided in radians"""
-        result = _MatrixPerspective(float(fovy), float(aspect), float(near), float(far))
-        return result
+        return _MatrixPerspective(float(fovy), float(aspect), float(near), float(far))
 
     @classmethod
     def ortho(cls, left, right, bottom, top, near, far):
         # type: (float, float, float, float, float, float) -> Matrix
         """Get orthographic projection matrix"""
-        result = _MatrixOrtho(float(left), float(right), float(bottom), float(top), float(near), float(far))
-        return result
+        return _MatrixOrtho(
+            float(left),
+            float(right),
+            float(bottom),
+            float(top),
+            float(near),
+            float(far),
+        )
 
     @classmethod
     def look_at(cls, eye, target, up):
         # type: (Vector3, Vector3, Vector3) -> Matrix
         """Get camera look-at matrix (view matrix)"""
-        result = _MatrixLookAt(_vec3(eye), _vec3(target), _vec3(up))
-        return result
+        return _MatrixLookAt(_vec3(eye), _vec3(target), _vec3(up))
 
 
     def __init__(self, m0=None,
@@ -2275,7 +2255,7 @@ class Matrix(Structure):
 
 
     def __str__(self):
-        return "[{} at {}]".format(self.__class__.__name__, id(self))
+        return f"[{self.__class__.__name__} at {id(self)}]"
 
     def __repr__(self):
         return self.__str__()
@@ -2283,26 +2263,22 @@ class Matrix(Structure):
     def determinant(self):
         # type: (Matrix) -> float
         """Compute matrix determinant"""
-        result = _MatrixDeterminant(self)
-        return result
+        return _MatrixDeterminant(self)
 
     def trace(self):
         # type: (Matrix) -> float
         """Get the trace of the matrix (sum of the values along the diagonal)"""
-        result = _MatrixTrace(self)
-        return result
+        return _MatrixTrace(self)
 
     def transpose(self):
         # type: (Matrix) -> Matrix
         """Get the trace of the matrix (sum of the values along the diagonal)"""
-        result = _MatrixTranspose(self)
-        return result
+        return _MatrixTranspose(self)
 
     def invert(self):
         # type: (Matrix) -> Matrix
         """Invert provided matrix"""
-        result = _MatrixInvert(self)
-        return result
+        return _MatrixInvert(self)
 
 
 # Pointer type to Matrixs
@@ -2353,7 +2329,7 @@ class Color(Structure):
     def __getattr__(self, attr):
         m = _RGBA_GET_SWZL.match(attr)
         if not m:
-            raise AttributeError("Color object does not have attribute '{}'.".format(attr))
+            raise AttributeError(f"Color object does not have attribute '{attr}'.")
         cls = {1: int, 4: Color}.get(len(attr))
         v = self.todict()
         return cls(*(v[ch] for ch in attr))
@@ -2361,7 +2337,7 @@ class Color(Structure):
     def __setattr__(self, attr, value):
         m = _RGBA_SET_SWZL.match(attr)
         if not m:
-            raise AttributeError("Color object does not have attribute '{}'.".format(attr))
+            raise AttributeError(f"Color object does not have attribute '{attr}'.")
         if len(attr) == 1:
             super(Color, self).__setattr__(attr, int(value))
         else:
@@ -2384,43 +2360,37 @@ class Color(Structure):
         return "({: 3}, {: 3}, {: 3}, {: 3})".format(self.r, self.g, self.b, self.a)
 
     def __repr__(self):
-        return "Color{}".format(self.__str__())
+        return f"Color{self.__str__()}"
 
     def fade(self, alpha):
         # type: (Color, float) -> Color
         """Get color with alpha applied, alpha goes from 0.0f to 1.0f"""
-        result = _Fade(self, float(alpha))
-        return result
+        return _Fade(self, float(alpha))
 
     def to_int(self):
         # type: (Color) -> int
         """Get hexadecimal value for a Color"""
-        result = _ColorToInt(self)
-        return result
+        return _ColorToInt(self)
 
     def to_hsv(self):
         # type: (Color) -> Vector3
         """Get HSV values for a Color, hue [0..360], saturation/value [0..1]"""
-        result = _ColorToHSV(self)
-        return result
+        return _ColorToHSV(self)
 
     def from_hsv(self, saturation, value):
         # type: (float, float, float) -> Color
         """Get a Color from HSV values, hue [0..360], saturation/value [0..1]"""
-        result = _ColorFromHSV(self, float(saturation), float(value))
-        return result
+        return _ColorFromHSV(self, float(saturation), float(value))
 
     def alpha(self, alpha):
         # type: (Color, float) -> Color
         """Get color with alpha applied, alpha goes from 0.0f to 1.0f"""
-        result = _ColorAlpha(self, float(alpha))
-        return result
+        return _ColorAlpha(self, float(alpha))
 
     def alpha_blend(self, src, tint):
         # type: (Color, Color, Color) -> Color
         """Get src alpha-blended into dst color with tint"""
-        result = _ColorAlphaBlend(self, _color(src), _color(tint))
-        return result
+        return _ColorAlphaBlend(self, _color(src), _color(tint))
 
 
 # Pointer type to Colors
@@ -2471,7 +2441,7 @@ class Rectangle(Structure):
     def __getattr__(self, attr):
         m = _RECT_GET_SWZL.match(attr)
         if not m:
-            raise AttributeError("Rectangle object does not have attribute '{}'.".format(attr))
+            raise AttributeError(f"Rectangle object does not have attribute '{attr}'.")
         cls = {1: float, 4: Rectangle}.get(len(attr))
         v = self.todict()
         return cls(*(v[ch] for ch in attr))
@@ -2479,7 +2449,7 @@ class Rectangle(Structure):
     def __setattr__(self, attr, value):
         m = _RECT_SET_SWZL.match(attr)
         if not m:
-            raise AttributeError("Rectangle object does not have attribute '{}'.".format(attr))
+            raise AttributeError(f"Rectangle object does not have attribute '{attr}'.")
         if attr in ('width', 'height') or len(attr) == 1:
             super(Rectangle, self).__setattr__(attr, float(value))
         else:
@@ -2525,113 +2495,116 @@ class Image(Structure):
     def load(cls, file_name):
         # type: (Union[str, CharPtr]) -> Image
         """Load image from file into CPU memory (RAM)"""
-        result = _LoadImage(_str_in(file_name))
-        return result
+        return _LoadImage(_str_in(file_name))
 
     @classmethod
     def load_raw(cls, file_name, width, height, format, header_size):
         # type: (Union[str, CharPtr], int, int, int, int) -> Image
         """Load image from RAW file data"""
-        result = _LoadImageRaw(_str_in(file_name), int(width), int(height), int(format), int(header_size))
-        return result
+        return _LoadImageRaw(
+            _str_in(file_name),
+            int(width),
+            int(height),
+            int(format),
+            int(header_size),
+        )
 
     @classmethod
     def load_anim(cls, file_name, frames):
         # type: (Union[str, CharPtr], Union[Seq[int], IntPtr]) -> Image
         """Load image sequence from file (frames appended to image.data)"""
-        result = _LoadImageAnim(_str_in(file_name), frames)
-        return result
+        return _LoadImageAnim(_str_in(file_name), frames)
 
     @classmethod
     def load_from_memory(cls, file_type, file_data, data_size):
         # type: (Union[str, CharPtr], Union[Seq[int], UCharPtr], int) -> Image
         """Load image from memory buffer, fileType refers to extension: i.e. '.png'"""
-        result = _LoadImageFromMemory(_str_in(file_type), _str_in(file_data), int(data_size))
-        return result
+        return _LoadImageFromMemory(
+            _str_in(file_type), _str_in(file_data), int(data_size)
+        )
 
     @classmethod
     def load_from_texture(cls, texture):
         # type: (Texture2D) -> Image
         """Load image from GPU texture data"""
-        result = _LoadImageFromTexture(texture)
-        return result
+        return _LoadImageFromTexture(texture)
 
     @classmethod
     def load_from_screen():
         # type: () -> Image
         """Load image from screen buffer and (screenshot)"""
-        result = _LoadImageFromScreen()
-        return result
+        return _LoadImageFromScreen()
 
     @classmethod
     def gen_color(cls, width, height, color):
         # type: (int, int, Color) -> Image
         """Generate image: plain color"""
-        result = _GenImageColor(int(width), int(height), _color(color))
-        return result
+        return _GenImageColor(int(width), int(height), _color(color))
 
     @classmethod
     def gen_gradient_h(cls, width, height, left, right):
         # type: (int, int, Color, Color) -> Image
         """Generate image: horizontal gradient"""
-        result = _GenImageGradientH(int(width), int(height), _color(left), _color(right))
-        return result
+        return _GenImageGradientH(int(width), int(height), _color(left), _color(right))
 
     @classmethod
     def gen_gradient_v(cls, width, height, top, bottom):
         # type: (int, int, Color, Color) -> Image
         """Generate image: vertical gradient"""
-        result = _GenImageGradientV(int(width), int(height), _color(top), _color(bottom))
-        return result
+        return _GenImageGradientV(int(width), int(height), _color(top), _color(bottom))
 
     @classmethod
     def gen_gradient_radial(cls, width, height, density, inner, outer):
         # type: (int, int, float, Color, Color) -> Image
         """Generate image: radial gradient"""
-        result = _GenImageGradientRadial(int(width), int(height), float(density), _color(inner), _color(outer))
-        return result
+        return _GenImageGradientRadial(
+            int(width), int(height), float(density), _color(inner), _color(outer)
+        )
 
     @classmethod
     def gen_checked(cls, width, height, checks_x, checks_y, col1, col2):
         # type: (int, int, int, int, Color, Color) -> Image
         """Generate image: checked"""
-        result = _GenImageChecked(int(width), int(height), int(checks_x), int(checks_y), _color(col1), _color(col2))
-        return result
+        return _GenImageChecked(
+            int(width),
+            int(height),
+            int(checks_x),
+            int(checks_y),
+            _color(col1),
+            _color(col2),
+        )
 
     @classmethod
     def gen_white_noise(cls, width, height, factor):
         # type: (int, int, float) -> Image
         """Generate image: white noise"""
-        result = _GenImageWhiteNoise(int(width), int(height), float(factor))
-        return result
+        return _GenImageWhiteNoise(int(width), int(height), float(factor))
 
     @classmethod
     def gen_cellular(cls, width, height, tile_size):
         # type: (int, int, int) -> Image
         """Generate image: cellular algorithm, bigger tileSize means bigger cells"""
-        result = _GenImageCellular(int(width), int(height), int(tile_size))
-        return result
+        return _GenImageCellular(int(width), int(height), int(tile_size))
 
     @classmethod
     def from_image(cls, image, rec):
         # type: (Image, Rectangle) -> Image
         """Create an image from another image piece"""
-        result = _ImageFromImage(image, _rect(rec))
-        return result
+        return _ImageFromImage(image, _rect(rec))
 
     @classmethod
     def text(cls, text, font_size, color):
         # type: (Union[str, CharPtr], int, Color) -> Image
         """Create an image from text (default font)"""
-        result = _ImageText(_str_in(text), int(font_size), _color(color))
-        return result
+        return _ImageText(_str_in(text), int(font_size), _color(color))
 
     @classmethod
     def text_ex(cls, font, text, font_size, spacing, tint):
         # type: (Font, Union[str, CharPtr], float, float, Color) -> Image
         """Create an image from text (custom sprite font)"""
-        result = _ImageTextEx(font, _str_in(text), float(font_size), float(spacing), _color(tint))
-        return result
+        return _ImageTextEx(
+            font, _str_in(text), float(font_size), float(spacing), _color(tint)
+        )
 
 
     def __init__(self, data=None,
@@ -2664,20 +2637,17 @@ class Image(Structure):
     def export(self, file_name):
         # type: (Image, Union[str, CharPtr]) -> bool
         """Export image data to file, returns true on success"""
-        result = _ExportImage(self, _str_in(file_name))
-        return result
+        return _ExportImage(self, _str_in(file_name))
 
     def export_as_code(self, file_name):
         # type: (Image, Union[str, CharPtr]) -> bool
         """Export image as code file defining an array of bytes, returns true on success"""
-        result = _ExportImageAsCode(self, _str_in(file_name))
-        return result
+        return _ExportImageAsCode(self, _str_in(file_name))
 
     def copy(self):
         # type: (Image) -> Image
         """Create an image duplicate (useful for transformations)"""
-        result = _ImageCopy(self)
-        return result
+        return _ImageCopy(self)
 
     def format(self, new_format):
         # type: (ImagePtr, int) -> None
@@ -2862,27 +2832,26 @@ class Image(Structure):
     def load_colors(self):
         # type: (Image) -> ColorPtr
         """Load color data from image as a Color array (RGBA - 32bit)"""
-        result = _ptr_out(_LoadImageColors(self))
-        return result
+        return _ptr_out(_LoadImageColors(self))
 
     def load_palette(self, max_palette_size):
         # type: (Image, int) -> ColorPtr
         """Load colors palette from image as a Color array (RGBA - 32bit)"""
         color_count = Int(0)
-        result = _ptr_out(_LoadImagePalette(self, int(max_palette_size), byref(color_count)), color_count.value)
-        return result
+        return _ptr_out(
+            _LoadImagePalette(self, int(max_palette_size), byref(color_count)),
+            color_count.value,
+        )
 
     def get_alpha_border(self, threshold):
         # type: (Image, float) -> Rectangle
         """Get image alpha border rectangle"""
-        result = _GetImageAlphaBorder(self, float(threshold))
-        return result
+        return _GetImageAlphaBorder(self, float(threshold))
 
     def get_color(self, x, y):
         # type: (Image, int, int) -> Color
         """Get image pixel color at (x, y) position"""
-        result = _GetImageColor(self, int(x), int(y))
-        return result
+        return _GetImageColor(self, int(x), int(y))
 
     @staticmethod
     def unload_colors(colors):
@@ -3112,29 +3081,34 @@ class Font(Structure):
     def load(cls, file_name):
         # type: (Union[str, CharPtr]) -> Font
         """Load font from file into GPU memory (VRAM)"""
-        result = _LoadFont(_str_in(file_name))
-        return result
+        return _LoadFont(_str_in(file_name))
 
     @classmethod
     def load_ex(cls, file_name, font_size, font_chars, glyph_count):
         # type: (Union[str, CharPtr], int, Union[Seq[int], IntPtr], int) -> Font
         """Load font from file with extended parameters, use NULL for fontChars and 0 for glyphCount to load the default character set"""
-        result = _LoadFontEx(_str_in(file_name), int(font_size), font_chars, int(glyph_count))
-        return result
+        return _LoadFontEx(
+            _str_in(file_name), int(font_size), font_chars, int(glyph_count)
+        )
 
     @classmethod
     def load_from_image(cls, image, key, first_char):
         # type: (Image, Color, int) -> Font
         """Load font from Image (XNA style)"""
-        result = _LoadFontFromImage(image, _color(key), int(first_char))
-        return result
+        return _LoadFontFromImage(image, _color(key), int(first_char))
 
     @classmethod
     def load_from_memory(cls, file_type, file_data, data_size, font_size, font_chars, glyph_count):
         # type: (Union[str, CharPtr], Union[Seq[int], UCharPtr], int, int, Union[Seq[int], IntPtr], int) -> Font
         """Load font from memory buffer, fileType refers to extension: i.e. '.ttf'"""
-        result = _LoadFontFromMemory(_str_in(file_type), _str_in(file_data), int(data_size), int(font_size), font_chars, int(glyph_count))
-        return result
+        return _LoadFontFromMemory(
+            _str_in(file_type),
+            _str_in(file_data),
+            int(data_size),
+            int(font_size),
+            font_chars,
+            int(glyph_count),
+        )
 
 
     def __init__(self, base_size=None,
@@ -3162,7 +3136,7 @@ class Font(Structure):
 
 
     def __str__(self):
-        return "[{} at {}]".format(self.__class__.__name__, id(self))
+        return f"[{self.__class__.__name__} at {id(self)}]"
 
     def __repr__(self):
         return self.__str__()
@@ -3195,33 +3169,37 @@ class Font(Structure):
     def measure_text_ex(self, text, font_size, spacing):
         # type: (Font, Union[str, CharPtr], float, float) -> Vector2
         """Measure string size for Font"""
-        result = _MeasureTextEx(self, _str_in(text), float(font_size), float(spacing))
-        return result
+        return _MeasureTextEx(self, _str_in(text), float(font_size), float(spacing))
 
     def get_glyph_index(self, codepoint):
         # type: (Font, int) -> int
         """Get glyph index position in font for a codepoint (unicode character), fallback to '?' if not found"""
-        result = _GetGlyphIndex(self, int(codepoint))
-        return result
+        return _GetGlyphIndex(self, int(codepoint))
 
     def get_glyph_info(self, codepoint):
         # type: (Font, int) -> GlyphInfo
         """Get glyph font info data for a codepoint (unicode character), fallback to '?' if not found"""
-        result = _GetGlyphInfo(self, int(codepoint))
-        return result
+        return _GetGlyphInfo(self, int(codepoint))
 
     def get_glyph_atlas_rec(self, codepoint):
         # type: (Font, int) -> Rectangle
         """Get glyph rectangle in font atlas for a codepoint (unicode character), fallback to '?' if not found"""
-        result = _GetGlyphAtlasRec(self, int(codepoint))
-        return result
+        return _GetGlyphAtlasRec(self, int(codepoint))
 
     @staticmethod
     def load_data(file_data, data_size, font_size, font_chars, glyph_count, type):
         # type: (Union[Seq[int], UCharPtr], int, int, Union[Seq[int], IntPtr], int, int) -> GlyphInfoPtr
         """Load font data for further use"""
-        result = _ptr_out(_LoadFontData(_str_in(file_data), int(data_size), int(font_size), font_chars, int(glyph_count), int(type)))
-        return result
+        return _ptr_out(
+            _LoadFontData(
+                _str_in(file_data),
+                int(data_size),
+                int(font_size),
+                font_chars,
+                int(glyph_count),
+                int(type),
+            )
+        )
 
     @staticmethod
     def unload_data(chars, glyph_count):
@@ -3372,78 +3350,67 @@ class Mesh(Structure):
     def gen_poly(cls, sides, radius):
         # type: (int, float) -> Mesh
         """Generate polygonal mesh"""
-        result = _GenMeshPoly(int(sides), float(radius))
-        return result
+        return _GenMeshPoly(int(sides), float(radius))
 
     @classmethod
     def gen_plane(cls, width, length, res_x, res_z):
         # type: (float, float, int, int) -> Mesh
         """Generate plane mesh (with subdivisions)"""
-        result = _GenMeshPlane(float(width), float(length), int(res_x), int(res_z))
-        return result
+        return _GenMeshPlane(float(width), float(length), int(res_x), int(res_z))
 
     @classmethod
     def gen_cube(cls, width, height, length):
         # type: (float, float, float) -> Mesh
         """Generate cuboid mesh"""
-        result = _GenMeshCube(float(width), float(height), float(length))
-        return result
+        return _GenMeshCube(float(width), float(height), float(length))
 
     @classmethod
     def gen_sphere(cls, radius, rings, slices):
         # type: (float, int, int) -> Mesh
         """Generate sphere mesh (standard sphere)"""
-        result = _GenMeshSphere(float(radius), int(rings), int(slices))
-        return result
+        return _GenMeshSphere(float(radius), int(rings), int(slices))
 
     @classmethod
     def gen_hemi_sphere(cls, radius, rings, slices):
         # type: (float, int, int) -> Mesh
         """Generate half-sphere mesh (no bottom cap)"""
-        result = _GenMeshHemiSphere(float(radius), int(rings), int(slices))
-        return result
+        return _GenMeshHemiSphere(float(radius), int(rings), int(slices))
 
     @classmethod
     def gen_cylinder(cls, radius, height, slices):
         # type: (float, float, int) -> Mesh
         """Generate cylinder mesh"""
-        result = _GenMeshCylinder(float(radius), float(height), int(slices))
-        return result
+        return _GenMeshCylinder(float(radius), float(height), int(slices))
 
     @classmethod
     def gen_cone(cls, radius, height, slices):
         # type: (float, float, int) -> Mesh
         """Generate cone/pyramid mesh"""
-        result = _GenMeshCone(float(radius), float(height), int(slices))
-        return result
+        return _GenMeshCone(float(radius), float(height), int(slices))
 
     @classmethod
     def gen_torus(cls, radius, size, rad_seg, sides):
         # type: (float, float, int, int) -> Mesh
         """Generate torus mesh"""
-        result = _GenMeshTorus(float(radius), float(size), int(rad_seg), int(sides))
-        return result
+        return _GenMeshTorus(float(radius), float(size), int(rad_seg), int(sides))
 
     @classmethod
     def gen_knot(cls, radius, size, rad_seg, sides):
         # type: (float, float, int, int) -> Mesh
         """Generate trefoil knot mesh"""
-        result = _GenMeshKnot(float(radius), float(size), int(rad_seg), int(sides))
-        return result
+        return _GenMeshKnot(float(radius), float(size), int(rad_seg), int(sides))
 
     @classmethod
     def gen_heightmap(cls, heightmap, size):
         # type: (Image, Vector3) -> Mesh
         """Generate heightmap mesh from image data"""
-        result = _GenMeshHeightmap(heightmap, _vec3(size))
-        return result
+        return _GenMeshHeightmap(heightmap, _vec3(size))
 
     @classmethod
     def gen_cubicmap(cls, cubicmap, cube_size):
         # type: (Image, Vector3) -> Mesh
         """Generate cubes-based map mesh from image data"""
-        result = _GenMeshCubicmap(cubicmap, _vec3(cube_size))
-        return result
+        return _GenMeshCubicmap(cubicmap, _vec3(cube_size))
 
 
     def __init__(self, vertex_count=None,
@@ -3489,7 +3456,7 @@ class Mesh(Structure):
 
 
     def __str__(self):
-        return "[{} at {}]".format(self.__class__.__name__, id(self))
+        return f"[{self.__class__.__name__} at {id(self)}]"
 
     def __repr__(self):
         return self.__str__()
@@ -3522,14 +3489,12 @@ class Mesh(Structure):
     def export(self, file_name):
         # type: (Mesh, Union[str, CharPtr]) -> bool
         """Export mesh data to file, returns true on success"""
-        result = _ExportMesh(self, _str_in(file_name))
-        return result
+        return _ExportMesh(self, _str_in(file_name))
 
     def get_bounding_box(self):
         # type: (Mesh) -> BoundingBox
         """Compute mesh bounding box limits"""
-        result = _GetMeshBoundingBox(self)
-        return result
+        return _GetMeshBoundingBox(self)
 
     def gen_tangents(self):
         # type: (MeshPtr) -> None
@@ -3560,15 +3525,13 @@ class Shader(Structure):
     def load(cls, vs_file_name, fs_file_name):
         # type: (Union[str, CharPtr], Union[str, CharPtr]) -> Shader
         """Load shader from files and bind default locations"""
-        result = _LoadShader(_str_in(vs_file_name), _str_in(fs_file_name))
-        return result
+        return _LoadShader(_str_in(vs_file_name), _str_in(fs_file_name))
 
     @classmethod
     def load_from_memory(cls, vs_code, fs_code):
         # type: (Union[str, CharPtr], Union[str, CharPtr]) -> Shader
         """Load shader from code strings and bind default locations"""
-        result = _LoadShaderFromMemory(_str_in(vs_code), _str_in(fs_code))
-        return result
+        return _LoadShaderFromMemory(_str_in(vs_code), _str_in(fs_code))
 
 
     def __init__(self, id=None, locs=None):
@@ -3587,7 +3550,7 @@ class Shader(Structure):
 
 
     def __str__(self):
-        return "[{} at {}]".format(self.__class__.__name__, id(self))
+        return f"[{self.__class__.__name__} at {id(self)}]"
 
     def __repr__(self):
         return self.__str__()
@@ -3601,14 +3564,12 @@ class Shader(Structure):
     def get_location(self, uniform_name):
         # type: (Shader, Union[str, CharPtr]) -> int
         """Get shader uniform location"""
-        result = _GetShaderLocation(self, _str_in(uniform_name))
-        return result
+        return _GetShaderLocation(self, _str_in(uniform_name))
 
     def get_location_attrib(self, attrib_name):
         # type: (Shader, Union[str, CharPtr]) -> int
         """Get shader attribute location"""
-        result = _GetShaderLocationAttrib(self, _str_in(attrib_name))
-        return result
+        return _GetShaderLocationAttrib(self, _str_in(attrib_name))
 
     def set_value(self, loc_index, value, uniform_type):
         # type: (Shader, int, bytes, int) -> None
@@ -3699,15 +3660,16 @@ class Material(Structure):
         # type: (Union[str, CharPtr]) -> MaterialPtr
         """Load materials from model file"""
         material_count = Int(0)
-        result = _ptr_out(_LoadMaterials(_str_in(file_name), byref(material_count)), material_count.value)
-        return result
+        return _ptr_out(
+            _LoadMaterials(_str_in(file_name), byref(material_count)),
+            material_count.value,
+        )
 
     @classmethod
     def load_default():
         # type: () -> Material
         """Load default material (Supports: DIFFUSE, SPECULAR, NORMAL maps)"""
-        result = _LoadMaterialDefault()
-        return result
+        return _LoadMaterialDefault()
 
 
     def __init__(self, shader=None, maps=None, params=None):
@@ -3727,7 +3689,7 @@ class Material(Structure):
 
 
     def __str__(self):
-        return "[{} at {}]".format(self.__class__.__name__, id(self))
+        return f"[{self.__class__.__name__} at {id(self)}]"
 
     def __repr__(self):
         return self.__str__()
@@ -3847,15 +3809,13 @@ class Model(Structure):
     def load(cls, file_name):
         # type: (Union[str, CharPtr]) -> Model
         """Load model from files (meshes and materials)"""
-        result = _LoadModel(_str_in(file_name))
-        return result
+        return _LoadModel(_str_in(file_name))
 
     @classmethod
     def load_from_mesh(cls, mesh):
         # type: (Mesh) -> Model
         """Load model from generated mesh (default material)"""
-        result = _LoadModelFromMesh(mesh)
-        return result
+        return _LoadModelFromMesh(mesh)
 
 
     def __init__(self, transform=None,
@@ -3889,7 +3849,7 @@ class Model(Structure):
 
 
     def __str__(self):
-        return "[{} at {}]".format(self.__class__.__name__, id(self))
+        return f"[{self.__class__.__name__} at {id(self)}]"
 
     def __repr__(self):
         return self.__str__()
@@ -3897,8 +3857,7 @@ class Model(Structure):
     def is_animation_valid(self, anim):
         # type: (Model, ModelAnimation) -> bool
         """Check model animation skeleton match"""
-        result = _IsModelAnimationValid(self, anim)
-        return result
+        return _IsModelAnimationValid(self, anim)
 
     def update_animation(self, anim, frame):
         # type: (Model, ModelAnimation, int) -> None
@@ -3923,8 +3882,7 @@ class Model(Structure):
     def get_bounding_box(self):
         # type: (Model) -> BoundingBox
         """Compute model bounding box limits (considers all meshes)"""
-        result = _GetModelBoundingBox(self)
-        return result
+        return _GetModelBoundingBox(self)
 
     def draw(self, position, scale, tint):
         # type: (Model, Vector3, float, Color) -> None
@@ -4125,15 +4083,15 @@ class Wave(Structure):
     def load(cls, file_name):
         # type: (Union[str, CharPtr]) -> Wave
         """Load wave data from file"""
-        result = _LoadWave(_str_in(file_name))
-        return result
+        return _LoadWave(_str_in(file_name))
 
     @classmethod
     def load_from_memory(cls, file_type, file_data, data_size):
         # type: (Union[str, CharPtr], Union[Seq[int], UCharPtr], int) -> Wave
         """Load wave from memory buffer, fileType refers to extension: i.e. '.wav'"""
-        result = _LoadWaveFromMemory(_str_in(file_type), _str_in(file_data), int(data_size))
-        return result
+        return _LoadWaveFromMemory(
+            _str_in(file_type), _str_in(file_data), int(data_size)
+        )
 
 
     def __init__(self, frame_count=None,
@@ -4159,7 +4117,7 @@ class Wave(Structure):
 
 
     def __str__(self):
-        return "[{} at {}]".format(self.__class__.__name__, id(self))
+        return f"[{self.__class__.__name__} at {id(self)}]"
 
     def __repr__(self):
         return self.__str__()
@@ -4167,8 +4125,7 @@ class Wave(Structure):
     def copy(self):
         # type: (Wave) -> Wave
         """Copy a wave to a new wave"""
-        result = _WaveCopy(self)
-        return result
+        return _WaveCopy(self)
 
     def crop(self, init_sample, final_sample):
         # type: (WavePtr, int, int) -> None
@@ -4183,20 +4140,17 @@ class Wave(Structure):
     def format(self):
         # type: (Wave) -> Union[Seq[float], FloatPtr]
         """Load samples data from wave as a 32bit float data array"""
-        result = _ptr_out(_LoadWaveSamples(self.byref))
-        return result
+        return _ptr_out(_LoadWaveSamples(self.byref))
 
     def export(self, file_name):
         # type: (Wave, Union[str, CharPtr]) -> bool
         """Export wave data to file, returns true on success"""
-        result = _ExportWave(self, _str_in(file_name))
-        return result
+        return _ExportWave(self, _str_in(file_name))
 
     def export_as_code(self, file_name):
         # type: (Wave, Union[str, CharPtr]) -> bool
         """Export wave sample data to code (.h), returns true on success"""
-        result = _ExportWaveAsCode(self, _str_in(file_name))
-        return result
+        return _ExportWaveAsCode(self, _str_in(file_name))
 
     def unload(self):
         # type: (Wave) -> None
@@ -4235,8 +4189,7 @@ class AudioStream(Structure):
     def load(cls, sample_rate, sample_size, channels):
         # type: (int, int, int) -> AudioStream
         """Load audio stream (to stream raw audio pcm data)"""
-        result = _LoadAudioStream(sample_rate, sample_size, channels)
-        return result
+        return _LoadAudioStream(sample_rate, sample_size, channels)
 
 
     def __init__(self, buffer=None,
@@ -4262,7 +4215,7 @@ class AudioStream(Structure):
 
 
     def __str__(self):
-        return "[{} Playing: {}]".format(self.__class__.__name__, _IsAudioStreamPlaying(self))
+        return f"[{self.__class__.__name__} Playing: {_IsAudioStreamPlaying(self)}]"
 
     def __repr__(self):
         return self.__str__()
@@ -4280,8 +4233,7 @@ class AudioStream(Structure):
     def is_processed(self):
         # type: (AudioStream) -> bool
         """Check if any audio stream buffers requires refill"""
-        result = _IsAudioStreamProcessed(self)
-        return result
+        return _IsAudioStreamProcessed(self)
 
     def play(self):
         # type: (AudioStream) -> None
@@ -4301,8 +4253,7 @@ class AudioStream(Structure):
     def is_playing(self):
         # type: (AudioStream) -> bool
         """Check if audio stream is playing"""
-        result = _IsAudioStreamPlaying(self)
-        return result
+        return _IsAudioStreamPlaying(self)
 
     def stop(self):
         # type: (AudioStream) -> None
@@ -4368,15 +4319,13 @@ class Sound(Structure):
     def load(cls, file_name):
         # type: (Union[str, CharPtr]) -> Sound
         """Load sound from file"""
-        result = _LoadSound(_str_in(file_name))
-        return result
+        return _LoadSound(_str_in(file_name))
 
     @classmethod
     def load_from_wave(cls, wave):
         # type: (Wave) -> Sound
         """Load sound from wave data"""
-        result = _LoadSoundFromWave(wave)
-        return result
+        return _LoadSoundFromWave(wave)
 
 
     def __init__(self, stream=None, frame_count=None):
@@ -4395,7 +4344,7 @@ class Sound(Structure):
 
 
     def __str__(self):
-        return "[{} Playing: {}]".format(self.__class__.__name__, _IsSoundPlaying(self))
+        return f"[{self.__class__.__name__} Playing: {_IsSoundPlaying(self)}]"
 
     def __repr__(self):
         return self.__str__()
@@ -4428,8 +4377,7 @@ class Sound(Structure):
     def is_playing(self):
         # type: (Sound) -> bool
         """Check if a sound is currently playing"""
-        result = _IsSoundPlaying(self)
-        return result
+        return _IsSoundPlaying(self)
 
     def set_volume(self, volume):
         # type: (Sound, float) -> None
@@ -4460,8 +4408,7 @@ class Sound(Structure):
     def get_sounds_playing():
         # type: () -> int
         """Get number of sounds playing in the multichannel"""
-        result = _GetSoundsPlaying()
-        return result
+        return _GetSoundsPlaying()
 
     @staticmethod
     def stop_multi():
@@ -4516,7 +4463,7 @@ class Music(Structure):
 
 
     def __str__(self):
-        return "[{} at {}]".format(self.__class__.__name__, id(self))
+        return f"[{self.__class__.__name__} at {id(self)}]"
 
     def __repr__(self):
         return self.__str__()
@@ -4529,8 +4476,7 @@ class Music(Structure):
     def is_playing(self):
         # type: (Music) -> bool
         """Check if music is playing"""
-        result = _IsMusicStreamPlaying(self)
-        return result
+        return _IsMusicStreamPlaying(self)
 
     def update(self):
         # type: (Music) -> None
@@ -4575,28 +4521,26 @@ class Music(Structure):
     def get_time_length(self):
         # type: (Music) -> float
         """Get music time length (in seconds)"""
-        result = _GetMusicTimeLength(self)
-        return result
+        return _GetMusicTimeLength(self)
 
     def get_time_played(self):
         # type: (Music) -> float
         """Get current music time played (in seconds)"""
-        result = _GetMusicTimePlayed(self)
-        return result
+        return _GetMusicTimePlayed(self)
 
     @staticmethod
     def load(file_name):
         # type: (Union[str, CharPtr]) -> Music
         """Load music stream from file"""
-        result = _LoadMusicStream(_str_in(file_name))
-        return result
+        return _LoadMusicStream(_str_in(file_name))
 
     @staticmethod
     def load_from_memory(file_type, data, data_size):
         # type: (Union[str, CharPtr], Union[Seq[int], UCharPtr], int) -> Music
         """Load music stream from data"""
-        result = _LoadMusicStreamFromMemory(_str_in(file_type), _str_in(data), int(data_size))
-        return result
+        return _LoadMusicStreamFromMemory(
+            _str_in(file_type), _str_in(data), int(data_size)
+        )
 
 
 # Pointer type to Musics
@@ -4937,92 +4881,93 @@ class Matrix(Structure):
     def identity():
         # type: () -> Matrix
         """Get identity matrix"""
-        result = _MatrixIdentity()
-        return result
+        return _MatrixIdentity()
 
     @classmethod
     def translate(cls, x, y, z):
         # type: (float, float, float) -> Matrix
         """Get translation matrix"""
-        result = _MatrixTranslate(float(x), float(y), float(z))
-        return result
+        return _MatrixTranslate(float(x), float(y), float(z))
 
     @classmethod
     def rotate(cls, axis, angle):
         # type: (Vector3, float) -> Matrix
         """Create rotation matrix from axis and angle. Angle should be provided in radians"""
-        result = _MatrixRotate(_vec3(axis), float(angle))
-        return result
+        return _MatrixRotate(_vec3(axis), float(angle))
 
     @classmethod
     def rotate_x(cls, angle):
         # type: (float) -> Matrix
         """Get x-rotation matrix. Angle must be provided in radians"""
-        result = _MatrixRotateX(float(angle))
-        return result
+        return _MatrixRotateX(float(angle))
 
     @classmethod
     def rotate_y(cls, angle):
         # type: (float) -> Matrix
         """Get y-rotation matrix. Angle must be provided in radians"""
-        result = _MatrixRotateY(float(angle))
-        return result
+        return _MatrixRotateY(float(angle))
 
     @classmethod
     def rotate_z(cls, angle):
         # type: (float) -> Matrix
         """Get z-rotation matrix. Angle must be provided in radians"""
-        result = _MatrixRotateZ(float(angle))
-        return result
+        return _MatrixRotateZ(float(angle))
 
     @classmethod
     def rotate_xyz(cls, angle):
         # type: (Vector3) -> Matrix
         """Get xyz-rotation matrix. Angle must be provided in radians"""
-        result = _MatrixRotateXYZ(_vec3(angle))
-        return result
+        return _MatrixRotateXYZ(_vec3(angle))
 
     @classmethod
     def rotate_zyx(cls, angle):
         # type: (Vector3) -> Matrix
         """Get zyx-rotation matrix. Angle must be provided in radians"""
-        result = _MatrixRotateZYX(_vec3(angle))
-        return result
+        return _MatrixRotateZYX(_vec3(angle))
 
     @classmethod
     def scale(cls, x, y, z):
         # type: (float, float, float) -> Matrix
         """Get scaling matrix"""
-        result = _MatrixScale(float(x), float(y), float(z))
-        return result
+        return _MatrixScale(float(x), float(y), float(z))
 
     @classmethod
     def frustum(cls, left, right, bottom, top, near, far):
         # type: (float, float, float, float, float, float) -> Matrix
         """Get perspective projection matrix"""
-        result = _MatrixFrustum(float(left), float(right), float(bottom), float(top), float(near), float(far))
-        return result
+        return _MatrixFrustum(
+            float(left),
+            float(right),
+            float(bottom),
+            float(top),
+            float(near),
+            float(far),
+        )
 
     @classmethod
     def perspective(cls, fovy, aspect, near, far):
         # type: (float, float, float, float) -> Matrix
         """Get perspective projection matrix. Fovy angle must be provided in radians"""
-        result = _MatrixPerspective(float(fovy), float(aspect), float(near), float(far))
-        return result
+        return _MatrixPerspective(float(fovy), float(aspect), float(near), float(far))
 
     @classmethod
     def ortho(cls, left, right, bottom, top, near, far):
         # type: (float, float, float, float, float, float) -> Matrix
         """Get orthographic projection matrix"""
-        result = _MatrixOrtho(float(left), float(right), float(bottom), float(top), float(near), float(far))
-        return result
+        return _MatrixOrtho(
+            float(left),
+            float(right),
+            float(bottom),
+            float(top),
+            float(near),
+            float(far),
+        )
 
     @classmethod
     def look_at(cls, eye, target, up):
         # type: (Vector3, Vector3, Vector3) -> Matrix
         """Get camera look-at matrix (view matrix)"""
-        result = _MatrixLookAt(_vec3(eye), _vec3(target), _vec3(up))
-        return result
+        return _MatrixLookAt(_vec3(eye), _vec3(target), _vec3(up))
 
 
     def __init__(self, m0=None,
@@ -5070,7 +5015,7 @@ class Matrix(Structure):
 
 
     def __str__(self):
-        return "[{} at {}]".format(self.__class__.__name__, id(self))
+        return f"[{self.__class__.__name__} at {id(self)}]"
 
     def __repr__(self):
         return self.__str__()
@@ -5078,26 +5023,22 @@ class Matrix(Structure):
     def determinant(self):
         # type: (Matrix) -> float
         """Compute matrix determinant"""
-        result = _MatrixDeterminant(self)
-        return result
+        return _MatrixDeterminant(self)
 
     def trace(self):
         # type: (Matrix) -> float
         """Get the trace of the matrix (sum of the values along the diagonal)"""
-        result = _MatrixTrace(self)
-        return result
+        return _MatrixTrace(self)
 
     def transpose(self):
         # type: (Matrix) -> Matrix
         """Get the trace of the matrix (sum of the values along the diagonal)"""
-        result = _MatrixTranspose(self)
-        return result
+        return _MatrixTranspose(self)
 
     def invert(self):
         # type: (Matrix) -> Matrix
         """Invert provided matrix"""
-        result = _MatrixInvert(self)
-        return result
+        return _MatrixInvert(self)
 
 
 # Pointer type to Matrixs

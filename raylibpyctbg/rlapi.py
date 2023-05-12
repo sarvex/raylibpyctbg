@@ -852,20 +852,13 @@ class TypeInfo:
 
     @property
     def zero(self):
-        if self.name in C_TO_ZERO:
-            if self.pointer or self.length:
-                return "None"
-            return f'{C_TO_ZERO.get(self.name)}'
-        else:
+        if self.name not in C_TO_ZERO:
             return f"{self.name}.zero()"
+        return "None" if self.pointer or self.length else f'{C_TO_ZERO.get(self.name)}'
 
     @property
     def rl_type(self):
-        return "{}{}{}".format(
-            'const ' if self.const else '',
-            self.name,
-            (' ' + '*' * self.pointer) if self.pointer else ('[{}]'.format(self.length) if self.length else '')
-        )
+        return f"{'const ' if self.const else ''}{self.name}{' ' + '*' * self.pointer if self.pointer else f'[{self.length}]' if self.length else ''}"
 
     def arg(self, value, before, after):
         if self.name == '...':
@@ -880,7 +873,7 @@ class TypeInfo:
                     before.append(f"{value}_ref = cast({value}, {self.as_c_type()})")
                     # after.append(f"{value}_ref.contents.value")
                 return f"{value}_ref"
-            elif self.length:
+            else:
                 return f"_array({self.as_c_type()}, {value})"
         return f"{value}"
 
@@ -899,17 +892,14 @@ class TypeInfo:
             if self.pointer:
                 c_type = f"{c_type}Ptr"
                 sub = True
-        elif self.name == '...':
-            c_type = 'VoidPtr'
-            sub = True
         else:
             c_type = 'VoidPtr'
             sub = True
         if self.pointer:
             for _ in range(self.pointer - (1 if sub else 0)):
-                c_type = "POINTER({})".format(c_type)
+                c_type = f"POINTER({c_type})"
         elif self.length:
-            c_type = "{} * {}".format(c_type, self.length)
+            c_type = f"{c_type} * {self.length}"
         return c_type
 
     def as_py_type(self):
@@ -928,21 +918,17 @@ class TypeInfo:
         elif self.name in STRUCT_TYPES:
             py_type = self.name
             if self.pointer:
-                py_type = "{}Ptr".format(py_type)
+                py_type = f"{py_type}Ptr"
                 sub = True
-        elif self.name == '...':
-            py_type = 'bytes'
-            sub = True
         else:
             py_type = 'bytes'
             sub = True
-
         if self.pointer:
             for _ in range(self.pointer - (1 if sub else 0)):
-                py_type = "Sequence[{}]".format(py_type)
+                py_type = f"Sequence[{py_type}]"
 
         elif self.length:
-            py_type = "Sequence[{}]".format(py_type)
+            py_type = f"Sequence[{py_type}]"
 
         if py_type == "NonePtr":
             raise ValueError('Oh no!')
@@ -1023,8 +1009,7 @@ class FuncInfo:
         i = 1 if bound else 0
         p_hints = ', '.join([p_info.t_info.as_py_type() for p_info in self.p_info[i:]])
         r_hint = self.r_info.as_py_type()
-        hint = f"# type: ({p_hints}) -> {r_hint}"
-        return hint
+        return f"# type: ({p_hints}) -> {r_hint}"
 
     def prototype(self, lib_name, prototyper):
         argtypes = ', '.join([p.t_info.as_c_type() for p in self.p_info])
@@ -1102,11 +1087,7 @@ class FuncInfo:
         if bound_as == 'classmethod':
             param_list = ', '.join(p.py_param for p in self.p_info)
             arg_list = ', '.join(p_info.t_info.arg(p_info.py_name, before, after) for p_info in self.p_info)
-            if param_list:
-                param_list = 'cls, ' + param_list
-            else:
-                param_list = 'cls'
-
+            param_list = f'cls, {param_list}' if param_list else 'cls'
         elif bound_as == 'staticmethod':
             param_list = ', '.join(p.py_param for p in self.p_info)
             arg_list = ', '.join(p_info.t_info.arg(p_info.py_name, before, after) for p_info in self.p_info)
@@ -1114,7 +1095,7 @@ class FuncInfo:
             param_list = ', '.join(p.py_param for p in params)
             arg_list = ', '.join(p_info.t_info.arg(p_info.py_name, before, after) for p_info in params)
             if param_list:
-                param_list = 'self, ' + param_list
+                param_list = f'self, {param_list}'
                 arg_list = ('self.byref, ' if meta.get('byref', False) else 'self, ') + arg_list
             else:
                 param_list = 'self'
@@ -1172,21 +1153,20 @@ class StructInfo:
 
     def markdown(self, meta=None):
         print(self.name, '-->', meta)
-        f_data = ''
-        for f_info in self.f_info:
-            f_data += DOC_FIELD_ITEM.format(
+        f_data = ''.join(
+            DOC_FIELD_ITEM.format(
                 name=f_info.name,
                 python_type=f_info.t_info.as_py_type(),
                 ctypes_type='todo',
-                c_type='todo'
+                c_type='todo',
             )
-
+            for f_info in self.f_info
+        )
         c_data = '_None._'
         m_data = '_None._'
         s_data = '_None._'
         if meta:
-            clsmethods = meta.get('bindApiAsClassmethod', [])
-            if clsmethods:
+            if clsmethods := meta.get('bindApiAsClassmethod', []):
                 c_data = 'Classmethod name | Bound API\n-----------|---------\n'
                 for binding in clsmethods:
                     bound_name = snakefy(binding.get('renameAs'))
@@ -1201,8 +1181,7 @@ class StructInfo:
                     api_name = snakefy(binding.get('api'))
                     m_data += f"`self.{bound_name}()` | `{api_name}()`\n"
 
-            stamethods = meta.get('bindApiAsStaticmethod', [])
-            if stamethods:
+            if stamethods := meta.get('bindApiAsStaticmethod', []):
                 s_data = 'Staticethod name | Bound API\n-----------|---------\n'
                 for binding in stamethods:
                     bound_name = snakefy(binding.get('renameAs'))
@@ -1277,8 +1256,7 @@ class StructInfo:
         if 'bindApiAsClassmethod' in meta:
             for binding in meta.get('bindApiAsClassmethod'):
                 api = binding.get('api')
-                f_info = ALL_FUNCS.get(api)
-                if f_info:
+                if f_info := ALL_FUNCS.get(api):
                     impl += f_info.wrap_bound(binding, 'classmethod')
                 else:
                     print('f_info ->', f_info, binding)
@@ -1302,14 +1280,12 @@ class EnumInfo:
         self.doc = doc
 
     def markdown(self):
-        e_data = ''
-        for e_info in self.e_info:
-            e_data += DOC_ENUMERAND_ITEM.format(
-                name=e_info.name,
-                value=e_info.value,
-                description=e_info.doc
+        e_data = ''.join(
+            DOC_ENUMERAND_ITEM.format(
+                name=e_info.name, value=e_info.value, description=e_info.doc
             )
-
+            for e_info in self.e_info
+        )
         return DOC_ENUMERATION_ITEM.format(
             name=self.name,
             members=e_data
@@ -1356,20 +1332,14 @@ class WrapInfo:
         self.functions = []
 
     def markdown(self, out_fname, meta=None):
-        enum_items = ''
-        func_items = ''
         struct_items = ''
 
-        for e_info in self.enums:
-            enum_items += e_info.markdown()
-
+        enum_items = ''.join(e_info.markdown() for e_info in self.enums)
         for s_info in self.structs:
             s_meta = meta.get('structs', {}).get(s_info.name) if meta else None
             struct_items += s_info.markdown(s_meta)
 
-        for f_info in self.functions:
-            func_items += f_info.markdown()
-
+        func_items = ''.join(f_info.markdown() for f_info in self.functions)
         sec_structs = DOC_SECTION_STRUCTURES.format(items=struct_items)
         sec_enums = DOC_SECTION_ENUMERATIONS.format(items=enum_items)
         sec_funcs = DOC_SECTION_FUNCTIONS.format(items=func_items)
@@ -1453,22 +1423,18 @@ def get_typ_info(type_str):
     if type_str == '...':
         return TypeInfo(type_str, False, False, None, None)
 
-    match = REGEX_TYPE_RULE.fullmatch(type_str)
-    if match:
-        is_const, is_unsigned, t_name, length, pointer = match.groups()
-        if is_unsigned:
-            t_name = is_unsigned + t_name
-        t_info = TypeInfo(
-            t_name,
-            is_const is not None,
-            is_unsigned is not None,
-            int(pointer, 10) if pointer and str(length).startswith('[') else None,
-            len(length) if length and str(length).startswith('*') else None,
-        )
-
-        return t_info
-    else:
+    if not (match := REGEX_TYPE_RULE.fullmatch(type_str)):
         return TypeInfo('void', pointer="*")
+    is_const, is_unsigned, t_name, length, pointer = match.groups()
+    if is_unsigned:
+        t_name = is_unsigned + t_name
+    return TypeInfo(
+        t_name,
+        is_const is not None,
+        is_unsigned is not None,
+        int(pointer, 10) if pointer and str(length).startswith('[') else None,
+        len(length) if length and str(length).startswith('*') else None,
+    )
 
 
 def generate_wrapper(api_json, out_fname=None, *flags):
@@ -1527,8 +1493,7 @@ def generate_wrapper(api_json, out_fname=None, *flags):
             definfo = f"\n# {definfo}" if definfo else ''
 
             if deftype == 'COLOR':
-                match = REGEX_COLOR_RULE.match(defvalue)
-                if match:
+                if match := REGEX_COLOR_RULE.match(defvalue):
                     valtype, r, g, b, a = match.groups()
                     wrapper.defines.append(f"{definfo}\n{defname} = {valtype}({r}, {g}, {b}, {a})")
                     ALL_NAMES.append(defname)

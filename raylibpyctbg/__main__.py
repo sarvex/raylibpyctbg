@@ -164,11 +164,11 @@ def main(*args) -> int:
                 if val not in include:
                     include.append(val)
 
-            elif key == 'out':
-                out_file = val
-
             elif key == 'markdown':
                 doc_out_fname = val
+
+            elif key == 'out':
+                out_file = val
 
             else:
                 config[key] = val
@@ -176,10 +176,7 @@ def main(*args) -> int:
 
         elif arg.startswith('-no-'):
             key = arg[4:]
-            if key == 'type':
-                config['typeHint'] = False
-                config['typeAnnotate'] = False
-            elif key == 'attribSwizzling':
+            if key == 'attribSwizzling':
                 config['addVectorAttribSwizzling'] = False
                 config['addColorAttribSwizzling'] = False
                 config['addRectangleAttribSwizzling'] = False
@@ -193,21 +190,15 @@ def main(*args) -> int:
                 config['snakecaseFunctions'] = False
                 config['snakecaseParameters'] = False
                 config['snakecaseFields'] = False
+            elif key == 'type':
+                config['typeHint'] = False
+                config['typeAnnotate'] = False
             else:
                 config[key] = False
 
         elif arg.startswith('-'):
             key = arg[1:]
-            if key ==  'help':
-                print(USAGE)
-                exit()
-            elif key == 'typeHint':
-                config[key] = True
-                config['typeAnnotate'] = False
-            elif key == 'typeAnnotate':
-                config[key] = True
-                config['typeHint'] = False
-            elif key == 'attribSwizzling':
+            if key == 'attribSwizzling':
                 config['addVectorAttribSwizzling'] = False
                 config['addColorAttribSwizzling'] = False
                 config['addRectangleAttribSwizzling'] = False
@@ -217,10 +208,9 @@ def main(*args) -> int:
                 config['bindApiAsMethod'] = True
                 config['bindApiAsProperty'] = True
                 config['bindApiAsContextManager'] = True
-            elif key == 'snakecase':
-                config['snakecaseFunctions'] = True
-                config['snakecaseParameters'] = True
-                config['snakecaseFields'] = True
+            elif key == 'help':
+                print(USAGE)
+                exit()
             elif key == 'pythonic':
                 config["snakecaseFunctions"] = True
                 config["snakecaseParameters"] = True
@@ -237,6 +227,10 @@ def main(*args) -> int:
                 config["addRectangleAttribSwizzling"] = True
                 config["addContextManager"] = True
                 config["addVectorMath"] = True
+            elif key == 'snakecase':
+                config['snakecaseFunctions'] = True
+                config['snakecaseParameters'] = True
+                config['snakecaseFields'] = True
             elif key == 'spartan':
                 config["snakecaseFunctions"] = False
                 config["snakecaseParameters"] = False
@@ -253,13 +247,21 @@ def main(*args) -> int:
                 config["addRectangleAttribSwizzling"] = False
                 config["addContextManager"] = False
                 config["addVectorMath"] = False
+            elif key == 'typeAnnotate':
+                config[key] = True
+                config['typeHint'] = False
+            elif key == 'typeHint':
+                config[key] = True
+                config['typeAnnotate'] = False
             else:
                 config[key] = True
 
     try:
         gen_wrapper(include, out_file, in_bind_info, doc_out_fname, **config)
     except Exception as e:
-        print("Unable to generate the python binding due to an error:\n {}{}".format(e.__class__.__name__, e.args))
+        print(
+            f"Unable to generate the python binding due to an error:\n {e.__class__.__name__}{e.args}"
+        )
         traceback.print_exception(e)
         return 1
 

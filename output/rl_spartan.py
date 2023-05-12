@@ -1450,7 +1450,7 @@ if _lib_platform == 'win32':
     try:
         rlapi = CDLLEx(_lib_fname_abspath, LOAD_WITH_ALTERED_SEARCH_PATH)
     except OSError:
-        print("Unable to load {}.".format(_lib_fname[_lib_platform]))
+        print(f"Unable to load {_lib_fname[_lib_platform]}.")
         rlapi = None
 else:
     rlapi = CDLL(_lib_fname_abspath)
@@ -1544,9 +1544,7 @@ def _str_out(value):
 
 
 def _arr_in(typ, data):
-    if isinstance(data, POINTER(typ)):
-        return data
-    return (typ * len(data))(*data)
+    return data if isinstance(data, POINTER(typ)) else (typ * len(data))(*data)
 
 
 def _arr2_in(typ, data):
@@ -1569,9 +1567,7 @@ def _float(value):
 
 
 def _int(value, ranged=None):
-    if ranged:
-        return max(ranged[0], min(int(value), ranged[1]))
-    return int(value)
+    return max(ranged[0], min(int(value), ranged[1])) if ranged else int(value)
 
 
 def _vec2(seq):
@@ -1662,10 +1658,10 @@ class Vector2(Structure):
 
 
     def __str__(self):
-        return "({}, {})".format(self.x, self.y)
+        return f"({self.x}, {self.y})"
 
     def __repr__(self):
-        return "Vector2{}".format(self.__str__())
+        return f"Vector2{self.__str__()}"
 
 
 # Pointer type to Vector2s
@@ -1706,10 +1702,10 @@ class Vector3(Structure):
 
 
     def __str__(self):
-        return "({}, {}, {})".format(self.x, self.y, self.z)
+        return f"({self.x}, {self.y}, {self.z})"
 
     def __repr__(self):
-        return "Vector3{}".format(self.__str__())
+        return f"Vector3{self.__str__()}"
 
 
 # Pointer type to Vector3s
@@ -1752,10 +1748,10 @@ class Vector4(Structure):
 
 
     def __str__(self):
-        return "({}, {}, {}, {})".format(self.x, self.y, self.z, self.w)
+        return f"({self.x}, {self.y}, {self.z}, {self.w})"
 
     def __repr__(self):
-        return "Vector4{}".format(self.__str__())
+        return f"Vector4{self.__str__()}"
 
 
 # Pointer type to Vector4s
@@ -1840,7 +1836,7 @@ class Matrix(Structure):
 
 
     def __str__(self):
-        return "[{} at {}]".format(self.__class__.__name__, id(self))
+        return f"[{self.__class__.__name__} at {id(self)}]"
 
     def __repr__(self):
         return self.__str__()
@@ -1889,7 +1885,7 @@ class Color(Structure):
         return "({: 3}, {: 3}, {: 3}, {: 3})".format(self.r, self.g, self.b, self.a)
 
     def __repr__(self):
-        return "Color{}".format(self.__str__())
+        return f"Color{self.__str__()}"
 
 
 # Pointer type to Colors
@@ -2215,7 +2211,7 @@ class Font(Structure):
 
 
     def __str__(self):
-        return "[{} at {}]".format(self.__class__.__name__, id(self))
+        return f"[{self.__class__.__name__} at {id(self)}]"
 
     def __repr__(self):
         return self.__str__()
@@ -2386,7 +2382,7 @@ class Mesh(Structure):
 
 
     def __str__(self):
-        return "[{} at {}]".format(self.__class__.__name__, id(self))
+        return f"[{self.__class__.__name__} at {id(self)}]"
 
     def __repr__(self):
         return self.__str__()
@@ -2428,7 +2424,7 @@ class Shader(Structure):
 
 
     def __str__(self):
-        return "[{} at {}]".format(self.__class__.__name__, id(self))
+        return f"[{self.__class__.__name__} at {id(self)}]"
 
     def __repr__(self):
         return self.__str__()
@@ -2510,7 +2506,7 @@ class Material(Structure):
 
 
     def __str__(self):
-        return "[{} at {}]".format(self.__class__.__name__, id(self))
+        return f"[{self.__class__.__name__} at {id(self)}]"
 
     def __repr__(self):
         return self.__str__()
@@ -2648,7 +2644,7 @@ class Model(Structure):
 
 
     def __str__(self):
-        return "[{} at {}]".format(self.__class__.__name__, id(self))
+        return f"[{self.__class__.__name__} at {id(self)}]"
 
     def __repr__(self):
         return self.__str__()
@@ -2852,7 +2848,7 @@ class Wave(Structure):
 
 
     def __str__(self):
-        return "[{} at {}]".format(self.__class__.__name__, id(self))
+        return f"[{self.__class__.__name__} at {id(self)}]"
 
     def __repr__(self):
         return self.__str__()
@@ -2904,7 +2900,7 @@ class AudioStream(Structure):
 
 
     def __str__(self):
-        return "[{} Playing: {}]".format(self.__class__.__name__, _IsAudioStreamPlaying(self))
+        return f"[{self.__class__.__name__} Playing: {_IsAudioStreamPlaying(self)}]"
 
     def __repr__(self):
         return self.__str__()
@@ -2946,7 +2942,7 @@ class Sound(Structure):
 
 
     def __str__(self):
-        return "[{} Playing: {}]".format(self.__class__.__name__, _IsSoundPlaying(self))
+        return f"[{self.__class__.__name__} Playing: {_IsSoundPlaying(self)}]"
 
     def __repr__(self):
         return self.__str__()
@@ -2998,7 +2994,7 @@ class Music(Structure):
 
 
     def __str__(self):
-        return "[{} at {}]".format(self.__class__.__name__, id(self))
+        return f"[{self.__class__.__name__} at {id(self)}]"
 
     def __repr__(self):
         return self.__str__()
@@ -3378,7 +3374,7 @@ class Matrix(Structure):
 
 
     def __str__(self):
-        return "[{} at {}]".format(self.__class__.__name__, id(self))
+        return f"[{self.__class__.__name__} at {id(self)}]"
 
     def __repr__(self):
         return self.__str__()

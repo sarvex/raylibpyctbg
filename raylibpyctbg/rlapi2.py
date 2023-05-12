@@ -187,16 +187,11 @@ class TypeInfo(InfoBase):
     def get_c_type(self, full=False):
         ptr_arr = ''
         if self.arr_length:
-            ptr_arr = '[{}]'.format(self.arr_length)
+            ptr_arr = f'[{self.arr_length}]'
         elif self.ptr_level:
-            ptr_arr = ' {}'.format('*' * self.ptr_level)
+            ptr_arr = f" {'*' * self.ptr_level}"
 
-        return "{}{}{}{}".format(
-            'const ' if self.const and full else '',
-            'unsigned ' if self.unsigned else '',
-            self.name,
-            ptr_arr
-        )
+        return f"{'const ' if self.const and full else ''}{'unsigned ' if self.unsigned else ''}{self.name}{ptr_arr}"
 
     def get_py_type(self):
         typ = self.bind_generator.get_type(self.get_c_type(), None)
@@ -206,13 +201,11 @@ class TypeInfo(InfoBase):
             #     print(self.get_c_type(), '-->', self.get_ctype_type())
             name = base.py_type if base else self.name
             if self.is_string_type:
-                if self.ptr_level > 1:
-                    return 'Seq[str]'
-                return 'str'
+                return 'Seq[str]' if self.ptr_level > 1 else 'str'
             if self.arr_length:
-                return 'Seq[{}]'.format(name)
+                return f'Seq[{name}]'
             elif self.ptr_level:
-                return '{}Ptr'.format(name)
+                return f'{name}Ptr'
             return name
 
         return typ.py_type
@@ -224,16 +217,14 @@ class TypeInfo(InfoBase):
             name = base.ctypes_type if base else self.name
             ptr_arr = ''
             if self.is_string_type:
-                if self.ptr_level > 1:
-                    return 'CharPtrPtr'
-                return 'CharPtr'
+                return 'CharPtrPtr' if self.ptr_level > 1 else 'CharPtr'
             if self.arr_length:
-                ptr_arr = ' * {}'.format(self.arr_length)
+                ptr_arr = f' * {self.arr_length}'
             elif self.ptr_level:
                 ptr_arr = 'Ptr'
             elif name == 'Void':
                 ptr_arr = 'None'
-            return "{}{}".format(name, ptr_arr)
+            return f"{name}{ptr_arr}"
 
         return typ.ctypes_type
 
@@ -251,20 +242,18 @@ class TypeInfo(InfoBase):
             self.info['name'] = '...'
             self.info['ptr_level'] = 0
             self.info['arr_length'] = 0
-        else:
-            match = REGEX_TYPE_RULE.fullmatch(spec)
-            if match:
-                is_const, is_unsigned, t_name, length, pointer = match.groups()
-                self.info['const'] = True if is_const else False
-                self.info['unsigned'] = True if is_unsigned else False
-                self.info['name'] = t_name
-                self.info['ptr_level'] = len(length) if length and str(length).startswith('*') else 0
-                self.info['arr_length'] = int(pointer, 10) if pointer and str(length).startswith('[') else 0
+        elif match := REGEX_TYPE_RULE.fullmatch(spec):
+            is_const, is_unsigned, t_name, length, pointer = match.groups()
+            self.info['const'] = bool(is_const)
+            self.info['unsigned'] = bool(is_unsigned)
+            self.info['name'] = t_name
+            self.info['ptr_level'] = len(length) if length and str(length).startswith('*') else 0
+            self.info['arr_length'] = int(pointer, 10) if pointer and str(length).startswith('[') else 0
 
-            else:
+        else:
                 # raise ValueError("Spec: '{}' couldn't be parsed".format(spec))
-                print("Spec: '{}' couldn't be parsed".format(spec))
-                return False
+            print(f"Spec: '{spec}' couldn't be parsed")
+            return False
 
         typ = self.bind_generator.get_type(self.get_c_type(), None)
         if not typ:
@@ -273,7 +262,7 @@ class TypeInfo(InfoBase):
             if self.ptr_level or self.arr_length:
                 default = 'None'
             else:
-                default = '{}()'.format(self.name) if not primitive else primitive.default
+                default = f'{self.name}()' if not primitive else primitive.default
 
             typ = TypeMap(self.get_py_type(), self.get_ctype_type(), self.get_c_type(), default, self)
             # print('Added type:', typ.c_type)
@@ -306,7 +295,7 @@ class DefineInfo(InfoBase):
             return TPL_DEFINE_CONST.format(name=self.name, value=self.value, annotation=self.type_annotation, type_hint=self.type_hint)
 
         elif self.type == 'STRING':
-            val = "'{}'".format(self.value)
+            val = f"'{self.value}'"
             return TPL_DEFINE_CONST.format(name=self.name, value=val, annotation=self.type_annotation, type_hint=self.type_hint)
 
         elif self.type == 'FLOAT_MATH':
@@ -321,24 +310,24 @@ class DefineInfo(InfoBase):
 
     def gen_docs(self):
         if self.type in ('FLOAT', 'DOUBLE', 'INT', 'UNKNOWN'):
-            return '`{}` | `{}` | {}'.format(self.name, self.value, self.description or '*n/a*')
+            return f"`{self.name}` | `{self.value}` | {self.description or '*n/a*'}"
 
         elif self.type == 'STRING':
-            val = "'{}'".format(self.value)
+            val = f"'{self.value}'"
 
-            return '`{}` | `{}` | {}'.format(self.name, val, self.description or '*n/a*')
+            return f"`{self.name}` | `{val}` | {self.description or '*n/a*'}"
 
         elif self.type == 'FLOAT_MATH':
             val = self.value.replace('.0f', '.0').replace('/', ' / ')
 
-            return '`{}` | `{}` | {}'.format(self.name, val, self.description or '*n/a*')
+            return f"`{self.name}` | `{val}` | {self.description or '*n/a*'}"
 
         elif self.type == 'COLOR':
             val = self.value.replace('CLITERAL(Color){ ', 'Color(').replace(' }', ')')
             rgb = self.value.replace('CLITERAL(Color){ ', 'rgba(').replace(' }', ')')
-            extra = ' <span style="color:{};">█████</span> {}'.format(rgb, self.description or '*n/a*')
+            extra = f""" <span style="color:{rgb};">█████</span> {self.description or '*n/a*'}"""
 
-            return '`{}` | `{}` | {}'.format(self.name, val, extra)
+            return f'`{self.name}` | `{val}` | {extra}'
 
         return ''
 
@@ -426,15 +415,11 @@ class ParameterInfo(InfoBase):
 
     @property
     def type_annotation(self):
-        if self.config.type_annotate:
-            return ": '{}'".format(self.type.py_type)
-        return ''
+        return f": '{self.type.py_type}'" if self.config.type_annotate else ''
 
     @property
     def type_hint(self):
-        if self.config.type_hint:
-            return self.type.py_type
-        return ''
+        return self.type.py_type if self.config.type_hint else ''
 
     def gen_wrapper(self):
         return "{name}{annotation}".format(
@@ -446,15 +431,15 @@ class ParameterInfo(InfoBase):
         if is_self:
             name = 'self'
         else:
-            name = 'byref({})'.format(self.py_name) if self.out_param else self.py_name
+            name = f'byref({self.py_name})' if self.out_param else self.py_name
         if self.len_of_param:
-            return "len({})".format(snakefy(self.len_of_param))
+            return f"len({snakefy(self.len_of_param)})"
         elif self.func:
             return self.func.format(name)
         elif self.type.info.func:
             return self.type.info.func.format(name)
         elif self.type.info.is_string_type:
-            return "_str_in({})".format(self.py_name)
+            return f"_str_in({self.py_name})"
         return name
 
     def gen_docs(self):
@@ -486,15 +471,13 @@ class FunctionInfo(InfoBase):
 
     @property
     def type_annotation(self):
-        if self.config.type_annotate:
-            return " -> '{}'".format(self.type.py_type)
-        return ''
+        return f" -> '{self.type.py_type}'" if self.config.type_annotate else ''
 
     @property
     def type_hint(self):
         if self.config.type_hint:
             t_params = ', '.join([p.type_hint for p in self.params if not p.ommit])
-            return "# type: ({}) -> {}".format(t_params, self.type.py_type)
+            return f"# type: ({t_params}) -> {self.type.py_type}"
         return ''
 
     def gen_wrapper_proto(self, lib_name='raylib'):
@@ -523,13 +506,13 @@ class FunctionInfo(InfoBase):
 
     def gen_arg_list(self, bound_as='', byref=False):
         alist = [p.gen_wrapper_as_arg() for p in self.params]
-        if bound_as == 'classmethod':
-            pass
-        elif bound_as == 'staticmethod':
-            pass
-        elif bound_as in ('method', 'property'):
-            if alist:
-                alist[0] = 'self.byref' if byref else 'self'
+        if (
+            bound_as != 'classmethod'
+            and bound_as != 'staticmethod'
+            and bound_as in ('method', 'property')
+            and alist
+        ):
+            alist[0] = 'self.byref' if byref else 'self'
 
         return ', '.join(alist)
 
@@ -546,7 +529,7 @@ class FunctionInfo(InfoBase):
             indent = '        '
             if bound_as in ('classmethod', 'method', 'staticmethod'):
                 template = TPL_STRUCTURE_METHOD
-                decorator = '@{}\n    '.format(bound_as) if bound_as != 'method' else ''
+                decorator = f'@{bound_as}\n    ' if bound_as != 'method' else ''
             elif bound_as == 'property':
                 template = TPL_STRUCTURE_GETTER
                 decorator = '@property'
@@ -558,29 +541,27 @@ class FunctionInfo(InfoBase):
 
         for p in self.params:
             if p.out_param:
-                before += '\n{}{} = {}(0)'.format(indent, p.py_name, p.type.ctypes_type.replace('Ptr', ''))
+                before += f"\n{indent}{p.py_name} = {p.type.ctypes_type.replace('Ptr', '')}(0)"
             if p.use_as_length:
-                b = ', {}.value)'.format(p.py_name)
+                b = f', {p.py_name}.value)'
 
         if self.type.c_type != "void":
             if inplace:
-                result = 'self.{} = '.format(attr)
-                after = '\n{}return self'.format(indent)
+                result = f'self.{attr} = '
+                after = f'\n{indent}return self'
             else:
                 result = 'result = '
-                after = '\n{}return result'.format(indent)
+                after = f'\n{indent}return result'
             if self.type.info.ptr_level:
                 a = '_ptr_out('
                 b =  b if b else ')'
-            elif self.type.info.ptr_level:
-                a = '_arr_out('
-                b = b if b else ')'
-
         return template.format(
             py_name=name,
             decorator=decorator,
             annotation=self.type_annotation,
-            type_hint='\n{}{}'.format(indent, self.type_hint) if self.config.type_hint else '',
+            type_hint=f'\n{indent}{self.type_hint}'
+            if self.config.type_hint
+            else '',
             description=self.description,
             param_list=self.gen_param_list(bound_as),
             arg_list=self.gen_arg_list(bound_as, byref),
@@ -590,7 +571,7 @@ class FunctionInfo(InfoBase):
             prefix='_',
             a=a,
             b=b,
-            c_name=self.name
+            c_name=self.name,
         )
 
     def gen_wrapper_as_arg(self):
@@ -604,8 +585,7 @@ class FunctionInfo(InfoBase):
             # print(name, '->', type_name)
         else:
             name = type_name
-        info = self.bind_generator.find(name)
-        if info:
+        if info := self.bind_generator.find(name):
             if isinstance(info, StructureInfo):
                 return '<a href="#{name}">{name}</a>'.format(name=name)
             elif is_ptr:
@@ -614,11 +594,11 @@ class FunctionInfo(InfoBase):
         return None
 
     def gen_docs(self):
-        c_params = ["{} {}".format(p.type.c_type, p.py_name) for p in self.params]
-        c_decl = "{} {}({}) ".format(self.type.c_type, self.name, ', '.join(c_params))
+        c_params = [f"{p.type.c_type} {p.py_name}" for p in self.params]
+        c_decl = f"{self.type.c_type} {self.name}({', '.join(c_params)}) "
 
-        py_params = ["{}: {}".format(p.py_name, p.type.py_type) for p in self.params]
-        py_decl = "def {}({}) -> {}".format(self.py_name, ', '.join(py_params), self.type.py_type)
+        py_params = [f"{p.py_name}: {p.type.py_type}" for p in self.params]
+        py_decl = f"def {self.py_name}({', '.join(py_params)}) -> {self.type.py_type}"
 
         related = []
         names = []
@@ -635,11 +615,7 @@ class FunctionInfo(InfoBase):
             names.append(tname.rstrip('Ptr'))
             related.append(link)
 
-        if len(related):
-            see_also = "\nSee also:\n{}\n".format(', '.join(related))
-        else:
-            see_also = ''
-
+        see_also = f"\nSee also:\n{', '.join(related)}\n" if len(related) else ''
         return TPL_DOC_FUNCTION.format(
             func_id=self.name,
             name=self.py_name,
@@ -674,15 +650,13 @@ class CallbackInfo(InfoBase):
 
     @property
     def type_annotation(self):
-        if self.config.type_annotate:
-            return " -> {}".format(self.type.py_type)
-        return ''
+        return f" -> {self.type.py_type}" if self.config.type_annotate else ''
 
     @property
     def type_hint(self):
         if self.config.type_hint:
             t_params = ', '.join([p.type_hint for p in self.params])
-            return "\n    # type: ({}) -> {}".format(t_params, self.type.py_type)
+            return f"\n    # type: ({t_params}) -> {self.type.py_type}"
         return ''
 
     def gen_wrapper(self):
@@ -710,9 +684,9 @@ class CallbackInfo(InfoBase):
     def gen_docs(self):
         # t_params = ', '.join([p.type.py_type for p in self.params])
         t_params = self.gen_param_list()
-        signature = "({}) -> {}".format(t_params, self.type.py_type)
+        signature = f"({t_params}) -> {self.type.py_type}"
 
-        return '`{}` | `{}` | {}'.format(self.name, signature, self.description or '*n/a*')
+        return f"`{self.name}` | `{signature}` | {self.description or '*n/a*'}"
 
 # endregion (functions)
 
@@ -795,7 +769,7 @@ class EnumerandInfo(InfoBase):
         )
 
     def gen_docs(self):
-        return "`{}` | `{}` | {}".format(self.name, self.value, self.description)
+        return f"`{self.name}` | `{self.value}` | {self.description}"
 
 # endregion (enums)
 
@@ -828,21 +802,16 @@ class FieldInfo(InfoBase):
 
     @property
     def type_annotation(self):
-        if self.config.type_annotate:
-            return ": {}".format(self.type.py_type)
-        return ''
+        return f": {self.type.py_type}" if self.config.type_annotate else ''
 
     def gen_wrapper(self):
-        return "        ('{}', {}),".format(
-            self.py_name,
-            self.type.ctypes_type
-        )
+        return f"        ('{self.py_name}', {self.type.ctypes_type}),"
 
     def gen_param_wrapper(self):
         eq = ' = ' if self.config.type_annotate else '='
         name = self.py_name
         if globals().get(name):
-            name = '{}_'.format(name)
+            name = f'{name}_'
         return "{name}{annotation}{eq}None".format(
             name=name,
             annotation=self.type_annotation,
@@ -853,19 +822,13 @@ class FieldInfo(InfoBase):
         info = self.info['type']
         name = self.py_name
         if globals().get(name):
-            name = '{}_'.format(name)
+            name = f'{name}_'
         if info.ptr_level or info.arr_length:
             return name
-        return "{} or {}".format(name, self.type.default)
+        return f"{name} or {self.type.default}"
 
     def gen_docs(self):
-        return "`{}` | `{}` | `{}` | `{}` | {}".format(
-            self.py_name,
-            self.type.py_type,
-            self.type.ctypes_type,
-            self.type.c_type,
-            self.description
-        )
+        return f"`{self.py_name}` | `{self.type.py_type}` | `{self.type.ctypes_type}` | `{self.type.c_type}` | {self.description}"
 
 class StructureInfo(InfoBase):
 
@@ -955,21 +918,19 @@ class StructureInfo(InfoBase):
             extra_methods += TPL_RECTANGLE_SWIZZLING
 
         if self.meta_info.get('dunderStrExpression', False):
-            extra_methods += "\n    def __str__(self):\n        {}\n".format(self.meta_info.get('dunderStrExpression'))
+            extra_methods += f"\n    def __str__(self):\n        {self.meta_info.get('dunderStrExpression')}\n"
 
         if self.meta_info.get('dunderReprExpression', False):
-            extra_methods += "\n    def __repr__(self):\n        {}\n".format(self.meta_info.get('dunderReprExpression'))
+            extra_methods += f"\n    def __repr__(self):\n        {self.meta_info.get('dunderReprExpression')}\n"
 
-        if self.config.bind_context:
-
-            context = self.meta_info.get('bindApiAsContextManager', {})
-            if context:
+        if context := self.meta_info.get('bindApiAsContextManager', {}):
+            if self.config.bind_context:
                 ctx_enter = self.bind_generator.functions_by_name.get(context.get('enter'))
                 ctx_leave = self.bind_generator.functions_by_name.get(context.get('leave'))
                 if ctx_enter and ctx_leave:
                     extra_methods += TPL_CONTEXT_MANAGER.format(
-                        enter='_' + ctx_enter.name,
-                        leave='_' + ctx_leave.name)
+                        enter=f'_{ctx_enter.name}', leave=f'_{ctx_leave.name}'
+                    )
 
         if self.config.bind_property:
             methods = self.meta_info.get('bindApiAsProperty', [])
@@ -1013,9 +974,7 @@ class StructureInfo(InfoBase):
 
     def gen_init_typehint(self):
         if self.config.type_hint:
-            return "\n        # type: ({}) -> None".format(
-                ', '.join([f.type.py_type for f in self.fields])
-            )
+            return f"\n        # type: ({', '.join([f.type.py_type for f in self.fields])}) -> None"
         return ''
 
     def gen_wrapper(self):
@@ -1041,52 +1000,48 @@ class StructureInfo(InfoBase):
             for bind_data in methods:
                 api = bind_data.get('api')
                 rename = bind_data.get('renameAs', api)
-                # byref = bind_data.get('byref', False)
-                info = self.bind_generator.functions_by_name.get(api)
-                if info:
+                if info := self.bind_generator.functions_by_name.get(api):
                     if self.config.snakefy_functions:
                         rename = snakefy(rename)
                     params = info.gen_param_list('staticmethod')
-                    link = '<a href="#{}"><code>{}</code></a>'.format(info.name, info.py_name)
+                    link = f'<a href="#{info.name}"><code>{info.py_name}</code></a>'
 
-                    method_list.append("*staticmethod* | `.{}({})` | {}".format(rename, params, link))
+                    method_list.append(f"*staticmethod* | `.{rename}({params})` | {link}")
                 else:
-                    print("no docs for `{}`".format(api))
+                    print(f"no docs for `{api}`")
 
         if self.config.bind_classmethods:
-            method_list.append("*classmethod* | `.array_of(cls, {}_sequence)` | *n/a*".format(self.py_name))
+            method_list.append(
+                f"*classmethod* | `.array_of(cls, {self.py_name}_sequence)` | *n/a*"
+            )
             methods = self.meta_info.get('bindApiAsClassmethod', [])
             for bind_data in methods:
                 api = bind_data.get('api')
                 rename = bind_data.get('renameAs', api)
-                # byref = bind_data.get('byref', False)
-                info = self.bind_generator.functions_by_name.get(api)
-                if info:
+                if info := self.bind_generator.functions_by_name.get(api):
                     if self.config.snakefy_functions:
                         rename = snakefy(rename)
                     params = info.gen_param_list('classmethod')
-                    link = '<a href="#{}"><code>{}</code></a>'.format(info.name, info.py_name)
+                    link = f'<a href="#{info.name}"><code>{info.py_name}</code></a>'
 
-                    method_list.append("*classmethod* | `.{}({})` | {}".format(rename, params, link))
+                    method_list.append(f"*classmethod* | `.{rename}({params})` | {link}")
                 else:
-                    print("no docs for `{}`".format(api))
+                    print(f"no docs for `{api}`")
 
         if self.config.bind_methods:
             methods = self.meta_info.get('bindApiAsMethod', [])
             for bind_data in methods:
                 api = bind_data.get('api')
                 rename = bind_data.get('renameAs', api)
-                # byref = bind_data.get('byref', False)
-                info = self.bind_generator.functions_by_name.get(api)
-                if info:
+                if info := self.bind_generator.functions_by_name.get(api):
                     if self.config.snakefy_functions:
                         rename = snakefy(rename)
                     params = info.gen_param_list('method')
-                    link = '<a href="#{}"><code>{}</code></a>'.format(info.name, info.py_name)
+                    link = f'<a href="#{info.name}"><code>{info.py_name}</code></a>'
 
-                    method_list.append("*method* | `.{}({})` | {}".format(rename, params, link))
+                    method_list.append(f"*method* | `.{rename}({params})` | {link}")
                 else:
-                    print("no docs for `{}`".format(api))
+                    print(f"no docs for `{api}`")
 
         return TPL_DOC_METHODS.format(
             method_list='\n'.join(method_list)
@@ -1102,9 +1057,9 @@ class StructureInfo(InfoBase):
                 info = self.bind_generator.functions_by_name.get(api)
                 if self.config.snakefy_functions:
                     rename = snakefy(rename)
-                link = '<a href="#{}"><code>{}</code></a>'.format(info.name, info.py_name)
+                link = f'<a href="#{info.name}"><code>{info.py_name}</code></a>'
 
-                prop_list.append("`.{}` | {}".format(rename, link))
+                prop_list.append(f"`.{rename}` | {link}")
 
         return TPL_DOC_PROPERTIES.format(
             property_list='\n'.join(prop_list)
@@ -1186,20 +1141,23 @@ class BindGenerator:
         for struct_info in info.get('structs', []):
             name = struct_info.get('name')
             if name in loaded_structs:
-                print('{} already loaded'.format(name))
+                print(f'{name} already loaded')
                 continue
             loaded_structs.append(name)
             struct_meta = meta_info.get('structs', {}).get(name, {})
             t_info = TypeInfo(header_name, name, struct_meta, config, self, True)
             self.export_names.append(name)
-            self.map_type(t_info.name, TypeMap(
-                t_info.get_ctype_type(),
-                t_info.get_c_type(),
-                t_info.get_py_type(),
-                '{}()'.format(name),
-                t_info
-            ))
-            t_info_ptr = TypeInfo(header_name, name + ' *', struct_meta, config, self)
+            self.map_type(
+                t_info.name,
+                TypeMap(
+                    t_info.get_ctype_type(),
+                    t_info.get_c_type(),
+                    t_info.get_py_type(),
+                    f'{name}()',
+                    t_info,
+                ),
+            )
+            t_info_ptr = TypeInfo(header_name, f'{name} *', struct_meta, config, self)
             self.map_type(t_info_ptr.name, TypeMap(
                 t_info_ptr.get_ctype_type(),
                 t_info_ptr.get_c_type(),
@@ -1257,14 +1215,14 @@ class BindGenerator:
 
         for ctxmgr in meta_info.get('functions', {}).get('*', {}).get('contextManager', []):
             name = snakefy(ctxmgr.get('api')) if config.snakefy_functions else ctxmgr.get('api')
-            if not name in self.export_names:
+            if name not in self.export_names:
                 self.export_names.append(name)
                 self.context_managers.append(ctxmgr)
 
     def gen_wrapper(self, out_fname, config, doc_out_fname=None):
         fullcode = TPL_HEADER_IMPORTS.format(
             lib_name=config.lib_name,
-            exports="".join("\n    '{}',".format(n) for n in self.export_names),
+            exports="".join(f"\n    '{n}'," for n in self.export_names),
             lib_basedir=config.lib_basedir,
             win32_lib_filename=config.win32_lib_fname,
             linux_lib_filename=config.linux_lib_fname,
@@ -1294,9 +1252,7 @@ class BindGenerator:
                 fulldocs += struct.gen_docs()
 
         if gen_docs:
-            items = []
-            for alias in self.aliases:
-                items.append(alias.gen_docs())
+            items = [alias.gen_docs() for alias in self.aliases]
             fulldocs += TPL_DOC_ALIASES.format(aliases_list='\n'.join(items))
 
         if gen_docs:
@@ -1383,10 +1339,7 @@ class BindGenerator:
 
     def gen_contextmanager_docs(self, config, ctx_info, fn_enter, fn_leave):
         name = snakefy(ctx_info.get('api')) if config.snakefy_functions else ctx_info.get('api')
-        py_decl = 'def {}({}) -> None'.format(
-            name,
-            fn_enter.gen_param_list()
-        )
+        py_decl = f'def {name}({fn_enter.gen_param_list()}) -> None'
 
         return TPL_DOC_CONTEXTMANAGER.format(
             ctx_id=ctx_info.get('api'),
@@ -1533,10 +1486,7 @@ def snakefy(name):
             result += char.lower()
         lastchar = char
 
-    if keyword.iskeyword(result):
-        return "{}_".format(result)
-
-    return result
+    return f"{result}_" if keyword.iskeyword(result) else result
 
 
 def main(in_fnames, out_fname, in_meta=None, doc_out_fname=None, **config):
@@ -1562,8 +1512,8 @@ def main(in_fnames, out_fname, in_meta=None, doc_out_fname=None, **config):
     if in_meta:
         with open(in_meta, 'r', encoding='utf8') as meta:
             meta_info = json.load(meta)
-            default_config.update(meta_info.get('CONFIG', {}))
-    
+            default_config |= meta_info.get('CONFIG', {})
+
     default_config.update(config)
 
     config = Config(default_config)
